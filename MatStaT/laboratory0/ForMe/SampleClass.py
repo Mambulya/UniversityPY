@@ -64,7 +64,7 @@ class Sample:
                        np.round(self.б, 3), np.round(self.Dx, 3)))
 
     def frequency_histogram(self, Xlabel="Values", Ylabel="Amount", diagram_name="Frequency Histogram",
-                            rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink")):
+                            rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink"), num=7):
         """
         рисует частотную гистограмму выборги
         :param Xlabel: название оси Х
@@ -73,8 +73,9 @@ class Sample:
         :param rectangle_arg: (цвет прямоугольников, цвет границ прямоугольников)
         :param legend_arg: (название легенды, расположение легенды, нарисовать легенду в рамке)
         :param grid_arg: (тип сетки, цвет сетки)
+        :param num: на сколько интервалов разбить ось Ох
         """
-        num_bins = int(self.volume / 7)
+        num_bins = int(self.volume / num)
         step = (max(self.data) - min(self.data)) / num_bins
         bins = [min(self.data) + step / 2]
 
@@ -108,7 +109,7 @@ class Sample:
         plt.show()
 
     def possibility_histogram(self, Xlabel="Values", Ylabel="Posibility", diagram_name="Posibility Histogram",
-                              rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink")):
+                              rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink"), num = 7):
         """
         рисует вероятностную гистограмму выборги
         :param Xlabel: название оси Х
@@ -117,8 +118,9 @@ class Sample:
         :param rectangle_arg: (цвет прямоугольников, цвет границ прямоугольников)
         :param legend_arg: (название легенды, расположение легенды, нарисовать легенду в рамке)
         :param grid_arg: (тип сетки, цвет сетки)
+        :param num: на сколько интервалов разбить ось Ох
         """
-        num_bins = int(self.volume / 7)
+        num_bins = int(self.volume / num)
         step = (max(self.data) - min(self.data)) / num_bins
         bins = [min(self.data) + step / 2]
 
@@ -151,3 +153,4 @@ class Sample:
         plt.grid(linestyle=grid_arg[0], color=grid_arg[1])
 
         plt.show()
+
