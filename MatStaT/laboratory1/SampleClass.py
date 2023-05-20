@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import openpyxl
+import scipy.stats as stats
 import numpy as np
 from statsmodels.distributions.empirical_distribution import ECDF
+
 
 class Sample:
 
@@ -78,6 +80,7 @@ class Sample:
 
         self.Ex = sum(self.data) / self.volume  # выборочное среднее - состоятельная и не смещенная оценка параметра
         self.Dx = sum([i**2 for i in self.data]) / self.volume - (self.Ex)**2
+        self.Dx1 = self.volume*(self.Dx)**2 / (self.volume - 1)
         self.б = self.Dx ** (1 / 2)  # среднее квадротическое
         self.fashion = max(set(self.data), key = self.data.count)
 
@@ -96,16 +99,19 @@ class Sample:
 
         print(
             """
+            n = {}
+            Xn - X1 = {}
             Ex = {}
             б = {}
             Dx = б^2 = {}
+            Dx1 = {}
             медиана = {}
             g1(коэффициент ассимметрии) = {}
             мода = {}
             Q1 = {}
             Q3 = {}
             интерквартильная широта = {}
-            """.format(self.Ex, self.б,self.Dx, self.mediana, self.g1, self.fashion, self.Q1, self.Q3, self.interquartile_latitude))
+            """.format(self.volume, max(self.data) - min(self.data), self.Ex, self.б,self.Dx, self.Dx1, self.mediana, self.g1, self.fashion, self.Q1, self.Q3, self.interquartile_latitude))
 
     def get_frequency(self):
         """
@@ -179,27 +185,45 @@ class Sample:
         if self.б is None:
             self.create_moments()
 
-        num_bins = int(self.volume / num)
-        step = (max(self.data) - min(self.data)) / num_bins
+        num_bins = int(self.volume / num) # = 8
+
+        # определение границ
+        step = (max(self.data) - min(self.data)) / (num_bins-1)
         bins = [min(self.data) + step / 2]
 
-        for i in range(num_bins):
+        for i in range(num_bins-2):
             bins.append(bins[-1] + step)
 
         # вычисление частот каждого интервала
-        frequencies = [0] * num_bins
+        # sum(np.logical_and(bins[i]>d, d<=bins[i+1]))
+
+        frequencies = [0] * (num_bins)      # +2 места под -inf и +inf, -1 тк границ(bins) больше количсетва столбцов (frequencies) на 1
+        frequencies[0] = sum(1 if i <= bins[0] else 0 for i in self.data)   # сколько чисел попало до 1 границы, т.е. -inf
+        frequencies[-1] = sum(1 if i > bins[-1] else 0 for i in self.data)  # сколько чисел попало после последней границы, т.е. +inf
+
         for d in self.data:
-            for i in range(num_bins):
-                if bins[i] <= d < bins[i + 1]:
-                    frequencies[i] += 1
-                    break
+            for i in range(0, len(bins)-1):
+            # frequencies[i+1] = sum(np.logical_and(bins[i] >  self.data,  self.data <= bins[i + 1]))
+                if bins[i] < d <= bins[i + 1]:
+                    frequencies[i+1] += 1
+
+        # print(max(self.data))
+        # print(bins)
+        # print(frequencies)
+        # print(sum(frequencies))
+
 
         # построение диаграммы
         fig, ax = plt.subplots(figsize=(13, 6))
-        for i in range(num_bins):
-            rect = plt.Rectangle((bins[i], 0), step, frequencies[i], color=rectangle_arg[0], ec=rectangle_arg[1])
+        rect = plt.Rectangle((bins[0]-step, 0), step, frequencies[0], color=rectangle_arg[0], ec=rectangle_arg[1])  # -Inf
+        ax.add_patch(rect)
+
+        for i in range(len(bins)):
+            rect = plt.Rectangle((bins[i], 0), step, frequencies[i+1], color=rectangle_arg[0], ec=rectangle_arg[1]) # последняя итерация уже для -inf
             ax.add_patch(rect)
-        ax.set_xlim([min(self.data) - 1, max(self.data) + 2])
+
+        ax.add_patch(rect)
+        #ax.set_xlim([min(self.data) - 1, max(self.data) + 2])
         ax.set_ylim([0, max(frequencies) + 1])
         plt.xticks(bins)
 
@@ -208,7 +232,7 @@ class Sample:
         mediana_line = ax.plot([self.mediana]*2, [0, max(frequencies) + 0.5], label="Медиана", linestyle="solid", color="#00FFFF", linewidth=2)
         Q1_line = ax.plot([self.Q1]*2, [0,max(frequencies) + 0.5], label="Q1", linestyle="dotted", color="#6495ED", linewidth=2)
         Q3_line = ax.plot([self.Q3] * 2, [0, max(frequencies) + 0.5], label="Q3", linestyle="dotted", color="#6495ED", linewidth=2)
-        S_line = ax.plot([self.Ex, self.б + self.Ex], [max(frequencies) / 2]*2, label="б", linestyle="dashed", color="#badbdb", linewidth=2)
+        Ex_line = ax.plot([self.Ex, self.Ex], [0, max(frequencies) + 0.5], label="Мат. ожидание", linestyle="solid", color="#badbdb", linewidth=2)
 
 
         # настройка диаграммы
@@ -216,20 +240,13 @@ class Sample:
         plt.ylabel(Ylabel)
         plt.title(diagram_name)
         plt.grid(linestyle=grid_arg[0], color=grid_arg[1])
-        # создание легенды
-        # hist_legend = ax.legend(legend_arg[0], loc=legend_arg[1], frameon=legend_arg[2])  # легенда гистограммы
-        # ax.add_artist(hist_legend)
-
-        # leg1 = ax.legend(loc='upper right')
-        # leg2 = ax.legend([fashion_line, mediana_line, Q1_line, Q3_line, S_line], ['fashion', 'median', 'Q1', 'Q3', 'б'], loc='upper right')
-        # ax.add_artist(leg1)
 
         fig.legend(loc='outside upper right')
 
         plt.show()
 
     def draw_possibility_histogram(self, Xlabel="Значения выборки", Ylabel="Вероятность", diagram_name="Вероятностная гистограмма",
-                              rectangle_arg = ("pink", "red"), grid_arg=("--", "pink"), num = 7):
+                              rectangle_arg = ("pink", "red"), grid_arg=("--", "pink"), num = 10):
         """
         рисует вероятностную гистограмму выборки
         :param Xlabel: название оси Х
@@ -247,29 +264,42 @@ class Sample:
         if self.Ex is None:
             self.create_moments()
 
-        num_bins = int(self.volume / num)
-        step = (max(self.data) - min(self.data)) / num_bins
+        num_bins = int(self.volume / num)  # = 8
+
+        # определение границ
+        step = (max(self.data) - min(self.data)) / (num_bins - 1)
         bins = [min(self.data) + step / 2]
 
-        for i in range(num_bins):
+        for i in range(num_bins - 2):
             bins.append(bins[-1] + step)
 
-        # вычисление ОТНОСИТЕЛЬНЫХ частот каждого интервала
-        frequencies = [0] * num_bins
+        # вычисление частот каждого интервала
+        # sum(np.logical_and(bins[i]>d, d<=bins[i+1]))
+
+        frequencies = [0] * (
+            num_bins)  # +2 места под -inf и +inf, -1 тк границ(bins) больше количсетва столбцов (frequencies) на 1
+        frequencies[0] = sum(
+            1 if i <= bins[0] else 0 for i in self.data) / self.volume  # сколько чисел попало до 1 границы, т.е. -inf
+        frequencies[-1] = sum(
+            1 if i > bins[-1] else 0 for i in self.data) / self.volume  # сколько чисел попало после последней границы, т.е. +inf
+
         for d in self.data:
-            for i in range(num_bins):
-                if bins[i] <= d < bins[i + 1]:
-                    frequencies[i] += 1
-                    break
-        Rfrequencies = [i / self.volume for i in frequencies]
+            for i in range(0, len(bins) - 1):
+                # frequencies[i+1] = sum(np.logical_and(bins[i] >  self.data,  self.data <= bins[i + 1]))
+                if bins[i] < d <= bins[i + 1]:
+                    frequencies[i + 1] += 1/self.volume
 
         # построение диаграммы
         fig, ax = plt.subplots(figsize=(13, 6))
-        for i in range(num_bins):
-            rect = plt.Rectangle((bins[i], 0), step, Rfrequencies[i],  color=rectangle_arg[0], ec=rectangle_arg[1])
+        rect = plt.Rectangle((bins[0] - step, 0), step, frequencies[0], color=rectangle_arg[0], ec=rectangle_arg[1])
+        ax.add_patch(rect)
+        for i in range(len(bins)):
+            rect = plt.Rectangle((bins[i], 0), step, frequencies[i + 1], color=rectangle_arg[0], ec=rectangle_arg[1])
             ax.add_patch(rect)
-        ax.set_xlim([min(self.data) - 1, max(self.data) + 2])
-        ax.set_ylim([0, max(Rfrequencies) + 0.01])
+
+        ax.add_patch(rect)
+
+        ax.set_ylim([0, max(frequencies) + 0.01])
         plt.xticks(bins)
 
         # настройка диаграммы
@@ -279,14 +309,18 @@ class Sample:
         plt.grid(linestyle=grid_arg[0], color=grid_arg[1])
 
         # функция плотности
-        rangeX = np.arange(bins[0], bins[-1], 0.5)
+        rangeX = np.arange(bins[0] - step, bins[-1] + step, 0.5)
         std_dev = self.б
         mean = self.Ex
         pdf = (1 / (std_dev * np.sqrt(2 * np.pi))) * np.exp(-np.power(rangeX - mean, 2) / (2 * np.power(std_dev, 2)))
-        plt.plot(rangeX, pdf, 'r', linewidth=2, label='pdf')
+        plt.plot(rangeX, pdf, 'r', linewidth=2, label='f(x) норм. распределения')
+
+        # проверка функции
+        # x = np.linspace(mean - 3 * std_dev, mean + 3 * std_dev, 100)
+        # plt.plot(x, stats.norm.pdf(x, mean, std_dev))
 
         # создание легенды
-        fig.legend(loc='upper right')
+        fig.legend()
         plt.show()
 
     def draw_dot_graph(self):
@@ -305,18 +339,55 @@ class Sample:
         x = [i for i in self.frequencies.keys()]
         y = [i for i in self.frequencies.values()]
         plt.scatter(x, y)
+        plt.title("Частотность значений")
         plt.xlabel("Значения выборки")
         plt.ylabel("Частота")
         plt.show()
 
-    def draw_empirical_fun(self):
+    def draw_empirical_fun1(self):
         if self.data is None:
             self.create_data()
+        if self.volume is None:
+            self.create_volume()
+        if self.Ex is None:
+            self.create_moments()
 
-        ecdf = ECDF(self.data)
+        # истинная ЭФР
+        ecdf = ECDF(sorted(self.data))
+        plt.step(ecdf.x, ecdf.y, label="ЭФР F2", color="red")
 
-        plt.step(ecdf.x, ecdf.y, label="ecdf", color="red")
+        # теоретичкская ЭФР
+        plt.plot(np.sort(self.data), np.linspace(0, 1, self.volume, endpoint=False), label="т.ЭФР F1", color="#40E0D0")
+
         plt.xlabel('Значения выборки')
         plt.ylabel("F(x)", fontsize=20)
         plt.legend(loc='upper left')
+
         plt.show()
+
+
+    def draw_empirical_fun(self):
+       if self.data is None:
+           self.create_data()
+       if self.volume is None:
+           self.create_volume()
+       if self.Ex is None:
+           self.create_moments()
+
+       X_sorted = sorted(self.data)
+
+       # истинная ЭФР
+       n = self.volume
+       F = np.arange(1, n + 1) / n
+       F_norm = F / np.max(F)
+       plt.plot(X_sorted, F_norm, color='red', label="истинная ЭФР F2")
+
+       # теоретичкская ЭФР
+       plt.plot(np.sort(self.data), np.linspace(0, 1, self.volume, endpoint=False), label="т.ЭФР F1", color="#40E0D0")
+
+
+       plt.title('Эмпирическая функция распределения')
+       plt.xlabel('Значение случайной величины')
+       plt.ylabel('F(x)')
+       plt.legend()
+       plt.show()
