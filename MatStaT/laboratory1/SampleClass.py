@@ -154,7 +154,7 @@ class Sample:
         self.interquartile_latitude = self.Q3 - self.Q1
 
     def draw_frequency_histogram(self, Xlabel="Значения выборки", Ylabel="Количество", diagram_name="Частотная гистограмма",
-                            rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink"), num=7):
+                            rectangle_arg = ("pink", "red"), legend_arg=(["Values"], 2, True), grid_arg=("--", "pink"), num=10):
         """
         * рисует частотную гистограмму выборки
         * отмечает
@@ -320,7 +320,7 @@ class Sample:
         # plt.plot(x, stats.norm.pdf(x, mean, std_dev))
 
         # создание легенды
-        fig.legend()
+        fig.legend(loc="upper right")
         plt.show()
 
     def draw_dot_graph(self):
@@ -379,10 +379,11 @@ class Sample:
        # истинная ЭФР
        n = self.volume
        F = np.arange(1, n + 1) / n
-       F_norm = F / np.max(F)
-       plt.plot(X_sorted, F_norm, color='red', label="истинная ЭФР F2")
+       print(F)
+       F = F / np.max(F)    # нормируем F, чтобы она принимала значения от 0 до 1
+       plt.plot(X_sorted, F, color='red', label="истинная ЭФР F2")
 
-       # теоретичкская ЭФР
+       # теоретичкская ЭФР нормального распределения
        plt.plot(np.sort(self.data), np.linspace(0, 1, self.volume, endpoint=False), label="т.ЭФР F1", color="#40E0D0")
 
 
