@@ -58,12 +58,6 @@ class Sample:
                     self.Y.append(cell.value)
             read_X = False
 
-    def select_XY(self):
-        """
-        с помощью нормированного остатка отбирает Y, которые актуальны для регрессии
-
-        """
-
     def __create_volume(self):
         self.volume = len(self.X)
 
@@ -78,22 +72,22 @@ class Sample:
         self.Xstd = (self.Xvariance)**0.5
         self.Ystd = (self.Yvariance)**0.5
 
-    def print_momnets(self):
+    def print_momenets(self):
         if self.Xmean is None:
             self.__create_moments()
 
-        print("Для значений Х:")
+        print("Для объясняющей переменной:")
         print("""
         мат ожидание = {}
         дисперсия = {}
-        среднеквадратическое отелонение = {}
+        среднеквадратическое отклонение = {}
         """.format(self.Xmean, self.Xvariance, self.Xstd))
 
-        print("Для значений Y:")
+        print("Для переменной отклика:")
         print("""
         мат ожидание = {}
         дисперсия = {}
-        среднеквадратическое отелонение = {}
+        среднеквадратическое отклонение = {}
         """.format(self.Ymean, self.Yvariance, self.Ystd))
 
     def __find_a_b(self):
@@ -164,7 +158,18 @@ class Sample:
             self.__find_determonation()
         print("коэффициент детерминации: {}".format(self.determination))
 
-    def __interval_in(self, arg, p=95, x_po_y=True):
+    def print_factf(self, p=95):
+        """
+        Расчитывает фактический и истинный критерий Фишера
+        """
+        SUM1 = sum((self.regression(x) - self.Ymean)**2 for x in self.X)
+        SUM2 = sum((self.Y[i] - self.regression(self.X[i]))**2 for i in range(self.volume))
+
+        F = SUM1/(SUM2/(self.volume - 2))
+        print("Истинный критерий Фишера: {}".format(F))
+        print("Табличный критерий Фишера (с вероятностью 0,95): {}".format(f.ppf(p / 100, dfn=1, dfd=self.volume - 2)))
+
+    def __interval_inf(self, arg, p=95):
         """
         вычисляет ширину доаерительного интервала около регрессии в точке (x, regression(x))
         :param arg: аргусент в regression()
@@ -192,12 +197,12 @@ class Sample:
 
         return up_y, down_y
 
-    def predict(self, x, p):
-        up, down = self.__interval_in(x, p)
+    def predictf(self, x, p):
+        up, down = self.__interval_inf(x, p)
 
-        print("При Y = {} значение X будет равняться от {} до {} с доверительной вероятностью {}%".format(x, np.round(up,1), np.round(down, 1), p))
+        print("При X = {} значение Y будет равняться от {} до {} с доверительной вероятностью {}%".format(x, np.round(up,1), np.round(down, 1), p))
 
-    def draw_dot_graph(self, x_arg = None, y_arg = None):
+    def draw_dot_graph(self, x_arg = None, y_arg = None, x_p=None):
         """
         рисует точечную диаграмму по элементам выборки X и Y
         :param x_arg: по умолчанию self.X, хотя можно поставить и для отобранных X
