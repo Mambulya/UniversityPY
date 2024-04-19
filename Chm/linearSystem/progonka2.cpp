@@ -60,21 +60,13 @@ def calculate_errors(x_act, x_pr):
     :return:
     """
     # u = sin(3*x)
-    # f_actual = []
-    # f_pr = []
     max_error = -1
 
     for i in range(len(x_act)):
-        f1 = sin(3*x_act[i])
-        max_error = max(max_error, abs(abs(f1) - abs(x_pr[i])))
+        u = sin(3*x_act[i])
+        max_error = max(max_error, abs(abs(u) - abs(x_pr[i])))
 
-        # f_actual.append(f1)
-        # f_pr.append(f2)
-
-    return max_error#, f_actual, f_pr
-
-
-
+    return max_error
 
 
 # test #1 n = 5
@@ -94,24 +86,25 @@ def calculate_errors(x_act, x_pr):
 # error = calculate_errors(xs, x)
 # print("error: {:.20f}".format(error))
 
-
-# all_f_act = []
-# all_f_pr = []
-# xs_real = []
-# x_app = []
-N = [5, 10, 20, 50, 100, 200, 500, 1000]
+N = [5, 10, 20, 100, 200, 500, 1000]
+colors = [(0.92, 0.75, 0.83), (0.75, 0.92, 0.75), (0.98, 0.66, 0.66), (0.79, 0.75, 0.92),
+          (0.75, 0.8, 0.92),  (0.55, 0.8, 0.94), (0.75, 0.92, 0.87), (0.93, 0.74, 0.85)]
 
 for n in N:
      A, f, xs = create_system(n)
-     x = progonka(A, f)  # корни прогонки
+     y = progonka(A, f)  # знаяения прогонки
 
-     #error, f_real, f_pr = calculate_errors(xs, x)
-     error = calculate_errors(xs, x)
-
-     # all_f_act.append(f_real)
-     # all_f_pr.append(f_pr)
-
+     error = calculate_errors(xs, y)
 
      print("final error for n = {}: {:.20f} (h^2 = {:.20f})".format(n, error, (3.1415926535 / n)**2))
 
-     print("final error for n = {}: {:.20f}".format(len(A) + 1, calculate_errors(A, f, x)))
+     u = [sin(3*i) for i in xs]
+     plt.plot(xs, u, color=colors[N.index(n)], label="n = " + str(n))
+     plt.plot(xs, y, color=colors[N.index(n)], linestyle = "--")
+
+plt.title("Погрешность при порядке n (u -, y --)")
+plt.ylabel("y, u")
+plt.xlabel("x")
+plt.legend()
+plt.grid()
+plt.show()
