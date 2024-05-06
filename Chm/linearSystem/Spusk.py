@@ -61,12 +61,33 @@ def Spusk(A, f, tol = 0.000001, x0:list = None, maxiter = None):
 
         r = r_new
         T = np.dot(r, r) / np.dot(A @ r, r)
-        ...
-    print("достигнуто максимальное число операций")
+
     return x0
 
+# TEST n = 5
+# A, f, xs = create_system(5)
+# f = f[1:-1]
+#
+# print(Spusk(A, f))
+errors = []
 
-A, f, xs = create_system(5)
-f = f[1:-1]
+if __name__ == "__main__":
+    N = [5, 10, 20, 100, 200]
 
-print(Spusk(A, f))
+    for n in N:
+         A, f, xs = create_system(n)
+         f = f[1:-1]
+         y = Spusk(A, f)  # знаяения прогонки
+         error = calculate_errors(xs[1:-1], y)
+         errors.append(error)
+
+         print("final error for n = {}: {:.20f}".format(n, error))
+
+    plt.plot(N, errors, color="red", label = "ε")
+
+    plt.title("Погрешность при различных n")
+    plt.ylabel("e")
+    plt.xlabel("n")
+    plt.legend()
+    plt.grid()
+    plt.show()
