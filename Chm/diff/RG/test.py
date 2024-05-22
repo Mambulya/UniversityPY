@@ -23,6 +23,7 @@ def RGtest(h = 0.5):
     y0 = 0
     y1 = y0     # yi и y(i-1)
     y2 = y0
+    error = -1
 
     for i in range(int((b-a) / h)):
         # вычисляем y1 на шаге i - при этом берем y2 при i
@@ -41,9 +42,15 @@ def RGtest(h = 0.5):
 
         # обновляем данные
         y1 = y1New
-        t += h
 
-        if 3.0 <= t <= 3.1:
-            print("i = {}: y1 = {}   y2 = {}".format(i, y1, y2))
+        E = e**(-t)
+
+        t += h
+        
+    print(max(abs(y1 - E), abs(y2 - E)))    # максимальная погрешность на последнем шаге
+
+        # проверка
+        # if 1.0 <= t <= 1.1:
+        #     print("i = {}: y1 = {}   y2 = {}".format(i, y1, y2))
 
 RGtest(h = 0.03)
