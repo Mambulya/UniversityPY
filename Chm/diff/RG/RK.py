@@ -13,40 +13,45 @@ import matplotlib.pyplot as plt
 from RKtest import runge_kutta
 
 
-def system(t, y):
+def system(y, m):
     y1, y2 = y
 
     dy1_dt = (((1-y1) * y1**2) / (0.1 + y1)) / y1*y2
-    dy2_dt = (y1 - t) * y2
+    dy2_dt = (y1 - m) * y2
 
     return np.array([dy1_dt, dy2_dt])
 
+if __name__ == "__main__":
+    # Начальные условия
+    y0 = [0.3, 0.3]
+    a = 0
+    b = 0.4
+    h = 0.03
 
-# Начальные условия
-y0 = [0.3, 0.3]
-a = 0.1
-b = 0.35
-h = 0.01
+    # Диапазон значений параметра m
+    m_values = [0.1, 0.15, 0.25, 0.35]
 
-# Решаем систему
-m_values, y_values = runge_kutta(system, y0, a, b, h=h)
+    figure, axis = plt.subplots(1, 3)
 
-y1_values = y_values[:, 0]
-y2_values = y_values[:, 1]
+    for m in m_values:
+        t_values, y_values = runge_kutta(lambda t, y: system(y, m), y0, a, b, h)
+        X_values = y_values[:, 0]
+        Y_values = y_values[:, 1]
 
-# Проверка точности
-print(f"Решения при h = {h}:")
-for t, y1, y2 in zip(m_values, y1_values, y2_values):
-    print(f"m = {t:.2f}, X = {y1:.4f}, Y = {y2:.4f}")
+        axis[0].plot(t_values, X_values, label=f'X(t) при m={m:.2f}')
+        axis[1].plot(t_values, Y_values, label=f'Y(t) при m={m:.2f}', linestyle='dashed')
+        axis[2].plot(X_values, Y_values, label=f'X и Y при m={m:.2f}')
+
+    axis[0].legend()
+    axis[1].legend()
+    axis[2].legend()
+    axis[0].set_title('Численные решения Х(t) при m')
+    axis[1].set_title('Численные решения Y(t) при m')
+    axis[2].set_title('Численные решения (X, Y) при m')
+    axis[0].grid()
+    axis[1].grid()
+    axis[2].grid()
+
+    plt.show()
 
 
-# график решений
-plt.plot(m_values, y1_values, color = "#1bf58b", label = "X")
-plt.plot(m_values, y2_values, color = "#f56b1b", label = "Y")
-
-plt.title("Численные решения X и Y при разных m")
-plt.ylabel("X, Y")
-plt.xlabel("m")
-plt.grid()
-plt.legend()
-plt.show()
