@@ -68,15 +68,28 @@ def plot_gradient(f, xs):
 
 
 if __name__ == "__main__":
-    def func(x):
+    def func(x:list):
         x1 = x[0]
         x2 = x[1]
         """Исходная функция"""
         return 3*(x1-5)**2 + (x2-4)**2
 
+    def df_func_x1(f, x:list, h=0.001): # первая производня функции по x1
+        x1 = x[0]
+        x2 = x[1]
+        return (f(x) - f([x1 - h, x2])) / h
+
+    def df_func_x2(f, x:list, h=0.001): # первая производня функции по x2
+        x1 = x[0]
+        x2 = x[1]
+        return (f(x) - f([x1, x2 - h])) / h
+
     def gradient_func(x1, x2):
         """Градиент func"""
-        return np.array([6*x1 - 30, 2*x2 - 8])
+        derivative_x1 = df_func_x1(f=func, x=[x1, x2])   # первая производная func по x1
+        derivative_x2 = df_func_x2(f=func, x=[x1, x2])  # первая производная func по x2
+        return np.array([derivative_x1, derivative_x2])
+        #return np.array([6*x1 - 30, 2*x2 - 8])
 
     def current_stop_rule(f, e, x_curr, x_prev):
         """Критерий остановки"""
