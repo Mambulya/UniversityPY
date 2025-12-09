@@ -71,8 +71,8 @@ def double_pref(C, A, B):
 
         X_flag[min_i][j] += 1
 
-    print("Матрица предпочтений:")
-    print(X_flag)
+    #print("Матрица предпочтений:")
+    #print(X_flag)
 
     for i in range(m):
         for j in range(n):
@@ -112,10 +112,12 @@ def double_pref(C, A, B):
                 B_temp[j] -= min_a_b
                 X_filled[i][j] = True
 
-    return X_temp
+    return X_temp, X_flag
 
 if __name__=="__main__":
-    X0 = double_pref(C, A, B)
+    X0, X_flag = double_pref(C, A, B)
+    print("Базисные клетки")
+    print(X_flag)
     print("Опорный план с помощью метода двойного предпочтения:")
     print(X0)
     print("Суммарные затраты:")
