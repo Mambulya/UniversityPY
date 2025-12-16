@@ -1,5 +1,5 @@
 import numpy as np
-from double_pref import С, Х
+
 
 def delta_method(C, A, B):
     m, n = C.shape
@@ -82,7 +82,7 @@ def delta_method(C, A, B):
                     allocated += allot
                     print(f"    A{i + 1}: закреплено {allot}, осталось у поставщика: {remaining_a[i]}")
 
-            print(f"  После распределения среди поставщиков с остатками: осталось потребности: {need}")
+            print(f"  После распределения среди поставщиков с остатками осталось потребности: {need}")
 
             # Если осталась нераспределённая потребность
             if need > 0:
@@ -177,11 +177,11 @@ def delta_method(C, A, B):
         for i_zero in zero_rows:
             if min_in_marked[i_zero] <= min_deficit:
                 print(f"\n  Для нулевой строки {i_zero + 1}: min ΔC = {min_in_marked[i_zero]} ≤ {min_deficit}")
-                print(f"  Выполняем непосредственное перераспределение")
+                print(f"перераспределение из избыточной в недостоющую...")
 
                 j = marked_cols[np.argmin(delta_C[i_zero, marked_cols])]
-                print(f"  Выбран столбец B{j + 1} (min ΔC = {delta_C[i_zero, j]})")
-
+                print(f"  Выбран столбец {j + 1} (min ΔC = {delta_C[i_zero, j]})")
+                print(delta_C)
                 # Находим избыточную строку, имеющую занятую клетку в столбце j
                 i_excess = None
                 for i in excess_rows:
@@ -190,11 +190,16 @@ def delta_method(C, A, B):
                         break
 
                 if i_excess is None:
-                    print(f"  Ошибка: не найдена избыточная строка с занятой клеткой в столбце B{j + 1}")
+                    print(f"  Ошибка: не найдена избыточная строка с занятой клеткой в столбце {j + 1}")
                     continue
 
                 print(f"  Избыточная строка с занятой клеткой: {i_excess + 1}")
-                print(f"  В клетке {i_excess + 1}B{j + 1}: X = {X[i_excess, j]}, Δa = {delta_a[i_excess]}")
+                print(f"  В клетке ({i_excess + 1},{j + 1}): X = {X[i_excess, j]}, Δa = {delta_a[i_excess]}")
+
+                for i_ in range(3):
+                    for j_ in range(3):
+                        print(" ", X[i_, j_], end = " ")
+                    print("         ", delta_a[i_])
 
                 # Находим недостаточную строку
                 i_deficit = deficit_rows[np.argmin(min_in_marked[deficit_rows])]
@@ -203,7 +208,7 @@ def delta_method(C, A, B):
                 # Величина перераспределения
                 delta_x = min(X[i_excess, j], abs(delta_a[i_excess]), delta_a[i_deficit])
                 print(
-                    f"  Величина перераспределения: min({X[i_excess, j]}, {abs(delta_a[i_excess])}, {delta_a[i_deficit]}) = {delta_x}")
+                    f"  Величина перераспределения: Δх = min({X[i_excess, j]}, {abs(delta_a[i_excess])}, {delta_a[i_deficit]}) = {delta_x}")
 
                 # Выполняем перераспределение
                 X[i_excess, j] -= delta_x
@@ -212,10 +217,10 @@ def delta_method(C, A, B):
                 delta_a[i_deficit] -= delta_x
 
                 print(f"  После перераспределения:")
-                print(f"    X[A{i_excess + 1}, B{j + 1}] = {X[i_excess, j]}")
-                print(f"    X[A{i_deficit + 1}, B{j + 1}] = {X[i_deficit, j]}")
-                print(f"    Δa[A{i_excess + 1}] = {delta_a[i_excess]}")
-                print(f"    Δa[A{i_deficit + 1}] = {delta_a[i_deficit]}")
+                print(f"    X[{i_excess + 1}, {j + 1}] = {X[i_excess, j]}")
+                print(f"    X[{i_deficit + 1}, {j + 1}] = {X[i_deficit, j]}")
+                print(f"    Δa[{i_excess + 1}] = {delta_a[i_excess]}")
+                print(f"    Δa[{i_deficit + 1}] = {delta_a[i_deficit]}")
 
                 direct_redistribution = True
                 break
@@ -298,7 +303,6 @@ def delta_method(C, A, B):
     print("ШАГ 12: Проверка оптимальности")
     print(delta_a*const)
     print(f"Все Δa_i = 0, план является допустимым")
-
     return X
 
 
